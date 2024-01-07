@@ -17,7 +17,8 @@ const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
     console.log("Pixelating Hero Image...");
     try {
         // Fetch the metadata of the input image
-        const metadata = await sharp(inputImagePath).metadata();
+        let metadata = await sharp(inputImagePath).resize(1024, null).toBuffer();
+        metadata = await sharp(metadata).metadata()
 
         // Calculate the new dimensions for resizing
         originalWidth = metadata.width;
@@ -40,7 +41,7 @@ const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
 
         console.log(
             "-> Image pixelated and saved successfully",
-            Math.ceil(originalWidth / pixelationFactor)
+            Math.ceil(originalWidth), originalHeight
         );
     } catch (err) {
         console.error("!! Error pixelating image:", err);
@@ -437,10 +438,7 @@ const generateMosaicColor = async (
     }
 };
 
-const getMosaicGray = async (path, pixelationFactor) => {
-    await getPixelatedImage(path, pixelationFactor); // Step 1
-    fileName = path.split("/").pop();
-
+const getMosaicGray = async (pixelationFactor) => {
     const brightnessArray = await getPixelBrightness("./assets/pixelated.jpg"); // Step 2
 
     const averageBrightness = await getSmallImageBrightness(); // Step 3
@@ -468,11 +466,7 @@ const getMosaicGray = async (path, pixelationFactor) => {
         .then(() => console.log("Task finished:"));
 };
 
-const getMosaicColor = async (path = "", pixelationFactor) => {
-    await getPixelatedImage(path, pixelationFactor); // Step 1
-
-    fileName = path.split("/").pop();
-
+const getMosaicColor = async (pixelationFactor) => {
     const pixelColor = await getPixelColor("./assets/pixelated.jpg");
 
     const averageColor = await getSmallAverageColor(); // Step 3
@@ -503,6 +497,18 @@ const getMosaicColor = async (path = "", pixelationFactor) => {
         .then(() => console.log("Task finished:"));
 };
 
+const processImage = async (path, pixelationFactor, isColor=1) => {
+    await getPixelatedImage(path, pixelationFactor); // Step 1
+
+    fileName = path.split("/").pop();
+
+    if(isColor){
+        getMosaicColor(pixelationFactor)
+    } else {
+        getMosaicGray(pixelationFactor)
+    }
+};
+
 module.exports = {
     getPixelatedImage,
     getPixelBrightness,
@@ -511,4 +517,6 @@ module.exports = {
     getAverageBrightness,
     getMosaicGray,
     getMosaicColor,
+
+    processImage
 };

@@ -1,9 +1,9 @@
-const { getMosaicGray, getMosaicColor } = require("./utils");
+const { getMosaicGray, getMosaicColor, processImage } = require("./utils");
 
 // Input image file path
-const inputImagePath = "./assets/blue.jpeg";
-const pixelationFactor = 18;
+const inputImagePath = "./assets/2.jpg";
+const pixelationFactor = 20;
 
 // getMosaicGray(inputImagePath, pixelationFactor);
 
-getMosaicColor(inputImagePath, pixelationFactor);
+processImage(inputImagePath, pixelationFactor, true);
