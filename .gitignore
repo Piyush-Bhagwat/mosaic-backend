@@ -1,0 +1,6 @@
+# Ignore image files
+*.jpg
+*.png
+*.jpeg
+
+node_modules/
