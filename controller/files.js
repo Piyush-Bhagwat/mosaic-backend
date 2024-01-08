@@ -55,12 +55,13 @@ const getMosaic = async (
             isColor,
             resolution
         );
-
+        
+        console.log("-->Uploading to cloud")
         const loaclPath = data.path;
         const mosaic = await sharp(loaclPath).toBuffer();
 
         await uploadMosaic(mosaic, `mosaic-${bigImageName}`).then(() =>
-            console.log("Uploaded to cloud")
+            console.log("-->Uploaded to cloud")
         );
 
         const imageURL = await getURL(`mosaic-${bigImageName}`);
