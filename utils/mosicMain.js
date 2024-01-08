@@ -475,11 +475,12 @@ const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath) => {
         );
 
         await mosaicCanvas.toFile(`${grayOutputPath}/mosaic-${fileName}`);
-        await greyMerge(bigImagePath, `${grayOutputPath}/mosaic-${fileName}`);
         console.log(
             "Mosaic Saved at path: ",
             `${grayOutputPath}/mosaic-${fileName}`
         );
+
+        await greyMerge(bigImagePath, `${grayOutputPath}/mosaic-${fileName}`);
     } catch (er) {
         if (er) console.log("Somethings wrong: ", er);
     }
@@ -509,15 +510,12 @@ const getMosaicColor = async (bigImagePath, pixelationFactor, rootPath) => {
             pixelationFactor
         );
 
-        // Convert the mosaicCanvas object to a Buffer
-        const mosaicBuffer = await mosaicCanvas.toBuffer();
-
         await mosaicCanvas.toFile(`${colorOutputPath}/mosaic-${fileName}`);
-        await colorMerge(bigImagePath, `${colorOutputPath}/mosaic-${fileName}`);
         console.log(
             "Mosaic Saved at path: ",
             `${colorOutputPath}/mosaic-${fileName}`
         );
+        await colorMerge(bigImagePath, `${colorOutputPath}/mosaic-${fileName}`);
     } catch (er) {
         if (er) console.log("Something wrong: ", er);
     }
@@ -545,6 +543,8 @@ const colorMerge = async (input, mosaic) => {
             .toFile(savePath);
 
         pathToreturn = savePath;
+
+        console.log("-> overlay genrated");
     } catch (er) {
         console.log("Error Merging files", er);
     }
@@ -573,6 +573,7 @@ const greyMerge = async (input, mosaic) => {
             .grayscale()
             .toFile(savePath);
         pathToreturn = savePath;
+        console.log("-> overlay genrated");
     } catch (er) {
         console.log("Error Merging files", er);
     }
