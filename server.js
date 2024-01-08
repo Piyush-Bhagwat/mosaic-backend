@@ -19,16 +19,6 @@ const upload = multer({ storage: storage });
 
 const uploadFolder = path.join(__dirname, "/assets");
 
-if (fs.existsSync(uploadFolder)) {
-    fs.rmSync(uploadFolder, {
-        recursive: true,
-        force: true,
-    });
-}
-if (!fs.existsSync(uploadFolder)) {
-    fs.mkdirSync(uploadFolder);
-}
-
 app.post(
     "/getMosaic",
     upload.fields([
@@ -37,6 +27,17 @@ app.post(
     ]),
     async (req, res) => {
         try {
+            if (fs.existsSync(uploadFolder)) {
+                fs.rmSync(uploadFolder, {
+                    recursive: true,
+                    force: true,
+                });
+            }
+            if (!fs.existsSync(uploadFolder)) {
+                fs.mkdirSync(uploadFolder);
+            }
+
+            
             const uid = req.body;
             console.log("small->", req.body.files);
             const smallImages = req.files["files"];
