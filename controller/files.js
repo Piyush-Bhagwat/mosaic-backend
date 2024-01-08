@@ -52,6 +52,7 @@ const getMosaic = async (
 
     const data = await processImage(
         inputImagePath,
+        uploadFolder,
         pixelationFactor,
         isColor,
         resolution
