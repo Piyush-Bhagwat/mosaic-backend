@@ -524,36 +524,58 @@ const getMosaicColor = async (bigImagePath, pixelationFactor, rootPath) => {
 };
 
 const colorMerge = async (input, mosaic) => {
-    const inputMeta = await sharp(input).metadata();
-    const w = inputMeta.width * resolutionMultiplier;
-    const h = inputMeta.height * resolutionMultiplier;
+    try {
+        console.log("getting mosaic file from: ", input);
+        const inputMeta = await sharp(input).metadata();
+        const w = inputMeta.width * resolutionMultiplier;
+        const h = inputMeta.height * resolutionMultiplier;
 
-    const img1 = await sharp(input).resize(w, h).ensureAlpha(0.4).toBuffer();
-    const img2 = await sharp(mosaic).resize(w, h).toBuffer();
-    const savePath = `${overlayPath}/overlayColor-${fileName}`;
-    await sharp(img1)
-        .composite([{ input: img2, blend: "overlay" }])
-        .modulate({ brightness: 2 })
-        .toFile(savePath);
+        const img1 = await sharp(input)
+            .resize(w, h)
+            .ensureAlpha(0.4)
+            .toBuffer();
+        const img2 = await sharp(mosaic).resize(w, h).toBuffer();
+        const savePath = `${overlayPath}/overlayColor-${fileName}`;
 
-    pathToreturn = savePath;
+        console.log("saving Merge file to:", savePath);
+
+        await sharp(img1)
+            .composite([{ input: img2, blend: "overlay" }])
+            .modulate({ brightness: 2 })
+            .toFile(savePath);
+
+        pathToreturn = savePath;
+    } catch (er) {
+        console.log("Error Merging files", er);
+    }
 };
 
 const greyMerge = async (input, mosaic) => {
-    const inputMeta = await sharp(input).metadata();
-    const w = inputMeta.width * resolutionMultiplier;
-    const h = inputMeta.height * resolutionMultiplier;
+    try {
+        console.log("getting mosaic file from: ", input);
 
-    const img1 = await sharp(input).resize(w, h).ensureAlpha(0.4).toBuffer();
-    const img2 = await sharp(mosaic).resize(w, h).toBuffer();
+        const inputMeta = await sharp(input).metadata();
+        const w = inputMeta.width * resolutionMultiplier;
+        const h = inputMeta.height * resolutionMultiplier;
 
-    const savePath = `${overlayPath}/overlayGrey-${fileName}`;
-    await sharp(img1)
-        .composite([{ input: img2, blend: "overlay" }])
-        .modulate({ brightness: 2 })
-        .grayscale()
-        .toFile(savePath);
-    pathToreturn = savePath;
+        const img1 = await sharp(input)
+            .resize(w, h)
+            .ensureAlpha(0.4)
+            .toBuffer();
+        const img2 = await sharp(mosaic).resize(w, h).toBuffer();
+
+        const savePath = `${overlayPath}/overlayGrey-${fileName}`;
+        console.log("saving Merge file to:", savePath);
+
+        await sharp(img1)
+            .composite([{ input: img2, blend: "overlay" }])
+            .modulate({ brightness: 2 })
+            .grayscale()
+            .toFile(savePath);
+        pathToreturn = savePath;
+    } catch (er) {
+        console.log("Error Merging files", er);
+    }
 };
 
 const processImage = async (
