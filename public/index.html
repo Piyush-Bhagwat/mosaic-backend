@@ -9,21 +9,48 @@
     </head>
     <body>
         <h1>Mosaic Generator</h1>
-        <form id="uploadForm" enctype="multipart/form-data">
-            <label for="file">Upload Big Image:</label>
-            <input type="file" name="file" accept="image/*" required />
-            <label for="files">Upload Small Images:</label>
-            <input
-                type="file"
-                name="files"
-                accept="image/*"
-                multiple
-                required
-            />
-            <button type="submit">Generate Mosaic</button>
-        </form>
-        <div id="result">
-            <!-- Display the generated image and download button here -->
+        <div class="container">
+            <form id="uploadForm" enctype="multipart/form-data" class="form">
+                <label for="file">Upload Big Image:</label>
+                <input type="file" name="file" accept="image/*" required />
+                <label for="files">Upload Small Images:</label>
+                <input
+                    type="file"
+                    name="files"
+                    accept="image/*"
+                    multiple
+                    required
+                />
+
+                <label for="pixelation">Pixelation:</label>
+                <input
+                    type="number"
+                    name="pixelation"
+                    value="30"
+                    max="80"
+                    min="15"
+                />
+                <div>
+                    <label for="mode">Grayscale:</label>
+                    <input type="checkbox" class="checkbox" name="mode" />
+                </div>
+                <label for="size">Resolution:</label>
+                <select name="size">
+                    <option value="1">SD</option>
+                    <option value="2">HD</option>
+                    <option value="3">UHD</option>
+                </select>
+
+                <button type="submit">Generate Mosaic</button>
+            </form>
+
+            <div  class="result-container">
+                <div id="result" class="image-display"></div>
+                <div class="download-btns"></div>
+            </div>
+        </div>
+        <div class="loader">
+            <span class="loading"></span>
         </div>
 
         <script>
@@ -33,24 +60,53 @@
                     event.preventDefault();
 
                     const formData = new FormData(this);
-
-                    const response = await fetch("/getMosaic", {
-                        method: "POST",
-                        body: formData,
-                    });
-
-                    const result = await response.json();
-                    console.log(`/static${result.path}`);
+                    const modeCheckbox =
+                        document.querySelector('input[name="mode"]');
+                    if (modeCheckbox.checked) {
+                        // If checked, add a custom value to indicate it's checked
+                        formData.append("mode", false);
+                    } else {
+                        formData.append("mode", true);
+                    }
 
                     const resultDiv = document.getElementById("result");
-                    // Update the image source to use the server route
-                    resultDiv.innerHTML = `<img class="display-img" src="/static${result.path}" alt="Generated Mosaic">`;
-                    const downloadButton = document.createElement("a");
-                    // Update the download link to use the server route
-                    downloadButton.href = `/static/${result.path}`;
-                    downloadButton.download = "mosaic.png";
-                    downloadButton.textContent = "Download Mosaic";
-                    resultDiv.appendChild(downloadButton);
+                    const loader = document.querySelector(".loader");
+                    loader.classList.add("visible");
+
+                    try {
+                        const response = await fetch("/getMosaic", {
+                            method: "POST",
+                            body: formData,
+                        });
+
+                        const result = await response.json();
+                        resultDiv.innerHTML = '';
+
+                        resultDiv.innerHTML += `<img class="display-img" src="/static${result.overlayPath}" alt="Generated Mosaic">`;
+                        resultDiv.innerHTML += `<img class="display-img" src="/static${result.mosaicPath}" alt="Generated Mosaic">`;
+
+                        const downloadButtonsDiv =
+                            document.querySelector(".download-btns");
+                        downloadButtonsDiv.innerHTML = ""; // Clear previous buttons if any
+
+                        const overlayDownload = document.createElement("a");
+                        overlayDownload.classList.add("download-btn")
+                        overlayDownload.href = `/static/${result.overlayPath}`;
+                        overlayDownload.download = "mosaic.png";
+                        overlayDownload.textContent = "Download Overlay";
+                        downloadButtonsDiv.appendChild(overlayDownload);
+
+                        const mosaicDownload = document.createElement("a");
+                        mosaicDownload.classList.add("download-btn")
+                        mosaicDownload.href = `/static/${result.mosaicPath}`;
+                        mosaicDownload.download = "mosaic.png";
+                        mosaicDownload.textContent = "Download Mosaic";
+                        downloadButtonsDiv.appendChild(mosaicDownload);
+                    } catch (error) {
+                        console.error("Error generating mosaic:", error);
+                    } finally {
+                        loader.classList.remove("visible");
+                    }
                 });
         </script>
     </body>

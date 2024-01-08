@@ -1,8 +1,6 @@
 const path = require("path");
 const fs = require("fs");
 const { processImage } = require("../utils/mosicMain");
-const sharp = require("sharp");
-const { uploadMosaic, getURL } = require("../DB/FBInit");
 
 //global var
 var bigImageName;
@@ -16,14 +14,14 @@ const getImages = async (uploadFolder, smallImages, bigImage) => {
     }
 
     const bigFileName = bigImage.originalname;
-    bigImageName = bigFileName;
-    const bigFilePath = path.join(uploadFolder, "big", bigFileName);
+    bigImageName = Date.now() + bigFileName;
+    const bigFilePath = path.join(uploadFolder, "big", bigImageName);
 
     fs.writeFileSync(bigFilePath, bigImage.buffer);
 
     await Promise.all(
         smallImages.map(async (file) => {
-            const fileName = file.originalname;
+            const fileName = Date.now() + file.originalname;
             const filePath = path.join(uploadFolder, "small", fileName);
 
             fs.writeFileSync(filePath, file.buffer);

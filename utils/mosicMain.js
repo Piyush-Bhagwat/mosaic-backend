@@ -16,6 +16,7 @@ var overlayPath = "/output/overlay";
 
 var fileName = "";
 var pathToreturn;
+var mosaicPath;
 var resolutionMultiplier = 1;
 
 const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
@@ -474,14 +475,14 @@ const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath) => {
             mosaicHeight,
             pixelationFactor
         );
+        mosaicPath = `${grayOutputPath}/${Date.now()}-mosaic-${fileName}`;
 
-        await mosaicCanvas.toFile(`${grayOutputPath}/mosaic-${fileName}`);
+        await mosaicCanvas.toFile(mosaicPath);
         console.log(
             "Mosaic Saved at path: ",
-            `${grayOutputPath}/mosaic-${fileName}`
+            mosaicPath
         );
-
-        await greyMerge(bigImagePath, `${grayOutputPath}/mosaic-${fileName}`);
+        await greyMerge(bigImagePath, mosaicPath);
     } catch (er) {
         if (er) console.log("Somethings wrong: ", er);
     }
@@ -510,13 +511,15 @@ const getMosaicColor = async (bigImagePath, pixelationFactor, rootPath) => {
             mosaicHeight,
             pixelationFactor
         );
+        mosaicPath = `${colorOutputPath}/${Date.now()}mosaic-${fileName}`;
 
-        await mosaicCanvas.toFile(`${colorOutputPath}/mosaic-${fileName}`);
+        await mosaicCanvas.toFile(mosaicPath);
         console.log(
             "Mosaic Saved at path: ",
-            `${colorOutputPath}/mosaic-${fileName}`
+            mosaicPath
         );
-        await colorMerge(bigImagePath, `${colorOutputPath}/mosaic-${fileName}`);
+        
+        await colorMerge(bigImagePath, mosaicPath);
     } catch (er) {
         if (er) console.log("Something wrong: ", er);
     }
@@ -534,7 +537,7 @@ const colorMerge = async (input, mosaic) => {
             .ensureAlpha(0.4)
             .toBuffer();
         const img2 = await sharp(mosaic).resize(w, h).toBuffer();
-        const savePath = `${overlayPath}/overlayColor-${fileName}`;
+        const savePath = `${overlayPath}/${Date.now()}-overlayColor-${fileName}`;
 
         console.log("saving Merge file to:", savePath);
 
@@ -565,7 +568,7 @@ const greyMerge = async (input, mosaic) => {
             .toBuffer();
         const img2 = await sharp(mosaic).resize(w, h).toBuffer();
 
-        const savePath = `${overlayPath}/overlayGrey-${fileName}`;
+        const savePath = `${overlayPath}/${Date.now()}-overlayGrey-${fileName}`;
         console.log("saving Merge file to:", savePath);
 
         await sharp(img1)
@@ -605,12 +608,12 @@ const processImage = async (
     const endTime = new Date();
 
     console.log("Time Taken(s): ", Math.floor((endTime - startTime) / 1000));
-    return { path: pathToreturn, tt: Math.floor((endTime - startTime) / 1000) };
+    return { path: pathToreturn, mosaicPath};
 };
 
 const createOutputFolders = async (rootPath) => {
     try {
-        if(colorOutputPath !== _path.join(rootPath, "/output/color")){
+        if (colorOutputPath !== _path.join(rootPath, "/output/color")) {
             colorOutputPath = _path.join(rootPath, colorOutputPath);
             grayOutputPath = _path.join(rootPath, grayOutputPath);
             overlayPath = _path.join(rootPath, overlayPath);
@@ -634,7 +637,6 @@ const createOutputFolders = async (rootPath) => {
         console.log("Error creating Output Folders:", er);
     }
 };
-
 
 module.exports = {
     processImage,
