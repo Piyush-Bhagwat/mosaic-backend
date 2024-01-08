@@ -153,6 +153,10 @@ const loadSmallImages = async (folderPath) => {
 
         // Now, 'images' array contains objects with the file name and corresponding image buffer
         console.log("-> small Images loaded successfully");
+        fs.rmSync(folderPath, {
+            recursive: true,
+            force: true,
+        });
         return images;
     } catch (error) {
         console.error("!! Error loading images:", error);
