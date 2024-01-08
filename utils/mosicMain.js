@@ -608,21 +608,27 @@ const processImage = async (
 };
 
 const createOutputFolders = async (rootPath) => {
-    colorOutputPath = _path.join(rootPath, colorOutputPath);
-    grayOutputPath = _path.join(rootPath, grayOutputPath);
-    overlayPath = _path.join(rootPath, overlayPath);
+    try {
+        colorOutputPath = _path.join(rootPath, colorOutputPath);
+        grayOutputPath = _path.join(rootPath, grayOutputPath);
+        overlayPath = _path.join(rootPath, overlayPath);
 
-    if (!fs.existsSync(_path.join(rootPath, "/output"))) {
-        fs.mkdirSync(_path.join(rootPath, "/output"));
-    }
-    if (!fs.existsSync(colorOutputPath)) {
-        fs.mkdirSync(colorOutputPath);
-    }
-    if (!fs.existsSync(grayOutputPath)) {
-        fs.mkdirSync(grayOutputPath);
-    }
-    if (!fs.existsSync(overlayPath)) {
-        fs.mkdirSync(overlayPath);
+        console.log(colorOutputPath, grayOutputPath, overlayPath, rootPath);
+
+        if (!fs.existsSync(_path.join(rootPath, "/output"))) {
+            fs.mkdirSync(_path.join(rootPath, "/output"));
+        }
+        if (!fs.existsSync(colorOutputPath)) {
+            fs.mkdirSync(colorOutputPath);
+        }
+        if (!fs.existsSync(grayOutputPath)) {
+            fs.mkdirSync(grayOutputPath);
+        }
+        if (!fs.existsSync(overlayPath)) {
+            fs.mkdirSync(overlayPath);
+        }
+    } catch (er) {
+        console.log("Error creating Output Folders:", er);
     }
 };
 

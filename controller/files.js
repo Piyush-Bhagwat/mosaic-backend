@@ -20,13 +20,11 @@ const getImages = async (uploadFolder, smallImages, bigImage) => {
     fs.mkdirSync(path.join(uploadFolder, "small"));
     fs.mkdirSync(path.join(uploadFolder, "big"));
 
-    
     const bigFileName = bigImage.originalname;
     bigImageName = bigFileName;
     const bigFilePath = path.join(uploadFolder, "big", bigFileName);
 
     fs.writeFileSync(bigFilePath, bigImage.buffer);
-    
 
     await Promise.all(
         smallImages.map(async (file) => {
@@ -36,7 +34,6 @@ const getImages = async (uploadFolder, smallImages, bigImage) => {
             fs.writeFileSync(filePath, file.buffer);
         })
     );
-
 };
 
 const getMosaic = async (
@@ -47,28 +44,32 @@ const getMosaic = async (
     isColor,
     resolution
 ) => {
-    await getImages(uploadFolder, smallImages, bigImage);
-    const inputImagePath = path.join(uploadFolder, "/big/", bigImageName);
+    try {
+        await getImages(uploadFolder, smallImages, bigImage);
+        const inputImagePath = path.join(uploadFolder, "/big/", bigImageName);
 
-    const data = await processImage(
-        inputImagePath,
-        uploadFolder,
-        pixelationFactor,
-        isColor,
-        resolution
-    );
+        const data = await processImage(
+            inputImagePath,
+            uploadFolder,
+            pixelationFactor,
+            isColor,
+            resolution
+        );
 
-    const loaclPath = data.path;
-    const mosaic = await sharp(loaclPath).toBuffer();
+        const loaclPath = data.path;
+        const mosaic = await sharp(loaclPath).toBuffer();
 
-    await uploadMosaic(mosaic, `mosaic-${bigImageName}`).then(() =>
-        console.log("Uploaded to cloud")
-    );
+        await uploadMosaic(mosaic, `mosaic-${bigImageName}`).then(() =>
+            console.log("Uploaded to cloud")
+        );
 
-    const imageURL = await getURL(`mosaic-${bigImageName}`);
-    console.log(imageURL);
+        const imageURL = await getURL(`mosaic-${bigImageName}`);
+        console.log(imageURL);
 
-    return { url: imageURL, tt: data.tt };
+        return { url: imageURL, tt: data.tt };
+    } catch (er) {
+        console.log("Error getting Mosaic", er);
+    }
 };
 
 module.exports = {
