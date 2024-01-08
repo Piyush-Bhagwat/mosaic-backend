@@ -1,6 +1,6 @@
 const sharp = require("sharp");
 const fs = require("fs");
-const _path = require("path")
+const _path = require("path");
 
 //global variables
 var originalWidth, originalHeight;
@@ -449,69 +449,85 @@ const generateMosaicColor = async (
 };
 
 const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath) => {
-    const brightnessArray = await getPixelBrightness("./assets/pixelated.jpg"); // Step 2
+    try {
+        const brightnessArray = await getPixelBrightness(
+            "./assets/pixelated.jpg"
+        ); // Step 2
 
-    const averageBrightness = await getSmallImageBrightness(rootPath); // Step 3
+        const averageBrightness = await getSmallImageBrightness(rootPath); // Step 3
 
-    const mosaicWidth = Math.ceil(
-        (originalWidth / pixelationFactor) * smallImageSize
-    );
-    const mosaicHeight = Math.ceil(
-        (originalHeight / pixelationFactor) * smallImageSize
-    );
+        const mosaicWidth = Math.ceil(
+            (originalWidth / pixelationFactor) * smallImageSize
+        );
+        const mosaicHeight = Math.ceil(
+            (originalHeight / pixelationFactor) * smallImageSize
+        );
 
-    console.log("Mosiac Dimensions:", mosaicWidth, mosaicHeight);
+        console.log("Mosiac Dimensions:", mosaicWidth, mosaicHeight);
 
-    const mosaicCanvas = await generateMosaicGray(
-        brightnessArray,
-        averageBrightness,
-        smallImages,
-        mosaicWidth,
-        mosaicHeight,
-        pixelationFactor
-    );
+        const mosaicCanvas = await generateMosaicGray(
+            brightnessArray,
+            averageBrightness,
+            smallImages,
+            mosaicWidth,
+            mosaicHeight,
+            pixelationFactor
+        );
 
-    await mosaicCanvas.toFile(`${grayOutputPath}/mosaic-${fileName}`);
-    await greyMerge(bigImagePath, `${grayOutputPath}/mosaic-${fileName}`);
-    console.log("finished: ", `${grayOutputPath}/mosaic-${fileName}`);
+        await mosaicCanvas.toFile(`${grayOutputPath}/mosaic-${fileName}`);
+        await greyMerge(bigImagePath, `${grayOutputPath}/mosaic-${fileName}`);
+        console.log(
+            "Mosaic Saved at path: ",
+            `${grayOutputPath}/mosaic-${fileName}`
+        );
+    } catch (er) {
+        if (er) console.log("Somethings wrong: ", er);
+    }
 };
 
 const getMosaicColor = async (bigImagePath, pixelationFactor, rootPath) => {
-    const pixelColor = await getPixelColor("./assets/pixelated.jpg");
+    try {
+        const pixelColor = await getPixelColor("./assets/pixelated.jpg");
 
-    const averageColor = await getSmallAverageColor(rootPath); // Step 3
+        const averageColor = await getSmallAverageColor(rootPath); // Step 3
 
-    const mosaicWidth = Math.ceil(
-        (originalWidth / pixelationFactor) * smallImageSize
-    );
-    const mosaicHeight = Math.ceil(
-        (originalHeight / pixelationFactor) * smallImageSize
-    );
+        const mosaicWidth = Math.ceil(
+            (originalWidth / pixelationFactor) * smallImageSize
+        );
+        const mosaicHeight = Math.ceil(
+            (originalHeight / pixelationFactor) * smallImageSize
+        );
 
-    console.log("Mosiac Dimensions:", mosaicWidth, mosaicHeight);
+        console.log("Mosiac Dimensions:", mosaicWidth, mosaicHeight);
 
-    const mosaicCanvas = await generateMosaicColor(
-        pixelColor,
-        averageColor,
-        smallImages,
-        mosaicWidth,
-        mosaicHeight,
-        pixelationFactor
-    );
+        const mosaicCanvas = await generateMosaicColor(
+            pixelColor,
+            averageColor,
+            smallImages,
+            mosaicWidth,
+            mosaicHeight,
+            pixelationFactor
+        );
 
-    // Convert the mosaicCanvas object to a Buffer
-    const mosaicBuffer = await mosaicCanvas.toBuffer();
+        // Convert the mosaicCanvas object to a Buffer
+        const mosaicBuffer = await mosaicCanvas.toBuffer();
 
-    await mosaicCanvas.toFile(`${colorOutputPath}/mosaic-${fileName}`);
-    await colorMerge(bigImagePath, `${colorOutputPath}/mosaic-${fileName}`);
-    console.log("finishaed", `${colorOutputPath}/mosaic-${fileName}`);
+        await mosaicCanvas.toFile(`${colorOutputPath}/mosaic-${fileName}`);
+        await colorMerge(bigImagePath, `${colorOutputPath}/mosaic-${fileName}`);
+        console.log(
+            "Mosaic Saved at path: ",
+            `${colorOutputPath}/mosaic-${fileName}`
+        );
+    } catch (er) {
+        if (er) console.log("Something wrong: ", er);
+    }
 };
 
 const colorMerge = async (input, mosaic) => {
     const inputMeta = await sharp(input).metadata();
-    const w = inputMeta.width*resolutionMultiplier;
-    const h = inputMeta.height*resolutionMultiplier;
-    
+    const w = inputMeta.width * resolutionMultiplier;
+    const h = inputMeta.height * resolutionMultiplier;
+
     const img1 = await sharp(input).resize(w, h).ensureAlpha(0.4).toBuffer();
     const img2 = await sharp(mosaic).resize(w, h).toBuffer();
     const savePath = `${overlayPath}/overlayColor-${fileName}`;
@@ -525,9 +541,9 @@ const colorMerge = async (input, mosaic) => {
 
 const greyMerge = async (input, mosaic) => {
     const inputMeta = await sharp(input).metadata();
-    const w = inputMeta.width*resolutionMultiplier;
-    const h = inputMeta.height*resolutionMultiplier;
-    
+    const w = inputMeta.width * resolutionMultiplier;
+    const h = inputMeta.height * resolutionMultiplier;
+
     const img1 = await sharp(input).resize(w, h).ensureAlpha(0.4).toBuffer();
     const img2 = await sharp(mosaic).resize(w, h).toBuffer();
 
@@ -540,7 +556,13 @@ const greyMerge = async (input, mosaic) => {
     pathToreturn = savePath;
 };
 
-const processImage = async (bigImagepPath, rootPath, pixelationFactor, isColor, resolution) => {
+const processImage = async (
+    bigImagepPath,
+    rootPath,
+    pixelationFactor,
+    isColor,
+    resolution
+) => {
     resolutionMultiplier = resolution;
     createOutputFolders(rootPath);
 
@@ -559,7 +581,7 @@ const processImage = async (bigImagepPath, rootPath, pixelationFactor, isColor, 
     const endTime = new Date();
 
     console.log("Time Taken(s): ", Math.floor((endTime - startTime) / 1000));
-    return {path: pathToreturn, tt:  Math.floor((endTime - startTime) / 1000)};
+    return { path: pathToreturn, tt: Math.floor((endTime - startTime) / 1000) };
 };
 
 const createOutputFolders = async (rootPath) => {
@@ -579,7 +601,7 @@ const createOutputFolders = async (rootPath) => {
     if (!fs.existsSync(overlayPath)) {
         fs.mkdirSync(overlayPath);
     }
-}
+};
 
 module.exports = {
     processImage,
