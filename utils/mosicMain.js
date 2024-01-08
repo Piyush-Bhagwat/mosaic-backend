@@ -609,11 +609,13 @@ const processImage = async (
 
 const createOutputFolders = async (rootPath) => {
     try {
-        colorOutputPath = _path.join(rootPath, colorOutputPath);
-        grayOutputPath = _path.join(rootPath, grayOutputPath);
-        overlayPath = _path.join(rootPath, overlayPath);
+        if(colorOutputPath !== _path.join(rootPath, "/output/color")){
+            colorOutputPath = _path.join(rootPath, colorOutputPath);
+            grayOutputPath = _path.join(rootPath, grayOutputPath);
+            overlayPath = _path.join(rootPath, overlayPath);
+        }
 
-        console.log(colorOutputPath, grayOutputPath, overlayPath, rootPath);
+        // console.log(colorOutputPath, grayOutputPath, overlayPath, rootPath);
 
         if (!fs.existsSync(_path.join(rootPath, "/output"))) {
             fs.mkdirSync(_path.join(rootPath, "/output"));
