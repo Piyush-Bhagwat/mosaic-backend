@@ -121,6 +121,7 @@ const loadSmallImages = async (folderPath) => {
     try {
         // Read the list of files in the folder
         const fileNames = fs.readdirSync(folderPath);
+        console.log("loading from-->", folderPath);
 
         // Array to store the processed images
         const images = [];

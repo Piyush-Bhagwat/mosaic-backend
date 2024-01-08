@@ -66,10 +66,7 @@ const getMosaic = async (
 
     const imageURL = await getURL(`mosaic-${bigImageName}`);
     console.log(imageURL);
-    fs.rmSync(path.join(uploadFolder, "big"), {
-        recursive: true,
-        force: true,
-    });
+
     return { url: imageURL, tt: data.tt };
 };
 
