@@ -153,10 +153,7 @@ const loadSmallImages = async (folderPath) => {
 
         // Now, 'images' array contains objects with the file name and corresponding image buffer
         console.log("-> small Images loaded successfully");
-        fs.rmSync(folderPath, {
-            recursive: true,
-            force: true,
-        });
+
         return images;
     } catch (error) {
         console.error("!! Error loading images:", error);
@@ -594,10 +591,9 @@ const processImage = async (
     createOutputFolders(rootPath);
 
     const startTime = new Date();
-    console.log("Initial Memory Usage:", formatMemoryUsage(process.memoryUsage()));
     await getPixelatedImage(bigImagepPath, pixelationFactor); // Step 1
 
-    fileName = bigImagepPath.split("/").pop();
+    fileName = bigImagepPath.split("\\").pop();
 
     if (isColor) {
         await getMosaicColor(bigImagepPath, pixelationFactor, rootPath);
@@ -609,7 +605,6 @@ const processImage = async (
     const endTime = new Date();
 
     console.log("Time Taken(s): ", Math.floor((endTime - startTime) / 1000));
-    console.log("Memory Usage After Operations:", formatMemoryUsage(process.memoryUsage()));
     return { path: pathToreturn, tt: Math.floor((endTime - startTime) / 1000) };
 };
 
@@ -640,24 +635,6 @@ const createOutputFolders = async (rootPath) => {
     }
 };
 
-
-
-
-
-
-function formatMemoryUsage(memoryUsage) {
-    return {
-        rss: bytesToMB(memoryUsage.rss),
-        heapTotal: bytesToMB(memoryUsage.heapTotal),
-        heapUsed: bytesToMB(memoryUsage.heapUsed),
-        external: bytesToMB(memoryUsage.external),
-    };
-}
-
-// Function to convert bytes to megabytes
-function bytesToMB(bytes) {
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-}
 
 module.exports = {
     processImage,

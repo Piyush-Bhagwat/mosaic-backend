@@ -19,6 +19,32 @@ const upload = multer({ storage: storage });
 
 const uploadFolder = path.join(__dirname, "/assets");
 
+if (fs.existsSync(uploadFolder)) {
+    fs.rmSync(uploadFolder, {
+        recursive: true,
+        force: true,
+    });
+}
+if (!fs.existsSync(uploadFolder)) {
+    fs.mkdirSync(uploadFolder);
+}
+fs.rmSync(path.join(uploadFolder, "small"), {
+    recursive: true,
+    force: true,
+});
+fs.rmSync(path.join(uploadFolder, "big"), {
+    recursive: true,
+    force: true,
+});
+
+
+
+app.use('/static', express.static(path.join(__dirname, 'assets/output')));
+app.use('/public', express.static(path.join(__dirname, "public")));
+app.get("/app", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.post(
     "/getMosaic",
     upload.fields([
@@ -27,17 +53,6 @@ app.post(
     ]),
     async (req, res) => {
         try {
-            if (fs.existsSync(uploadFolder)) {
-                fs.rmSync(uploadFolder, {
-                    recursive: true,
-                    force: true,
-                });
-            }
-            if (!fs.existsSync(uploadFolder)) {
-                fs.mkdirSync(uploadFolder);
-            }
-
-            
             const uid = req.body;
             console.log("small->", req.body.files);
             const smallImages = req.files["files"];
@@ -47,7 +62,7 @@ app.post(
                 return res.status(400).send("No files attached");
             }
 
-            const imageURL = await getMosaic(
+            const imagePath = await getMosaic(
                 uploadFolder,
                 smallImages,
                 bigImage,
@@ -55,8 +70,8 @@ app.post(
                 true,
                 1
             );
-
-            res.send(imageURL);
+            const relativePath = imagePath.path.replace(path.join(__dirname, "assets", "output"), '').replace(/\\/g, '/');
+            res.send({path: relativePath, tt: imagePath.tt});
         } catch (error) {
             console.error("Error processing files:", error);
             res.status(500).send("Internal Server Error");

@@ -8,17 +8,12 @@ const { uploadMosaic, getURL } = require("../DB/FBInit");
 var bigImageName;
 
 const getImages = async (uploadFolder, smallImages, bigImage) => {
-    fs.rmSync(path.join(uploadFolder, "small"), {
-        recursive: true,
-        force: true,
-    });
-    fs.rmSync(path.join(uploadFolder, "big"), {
-        recursive: true,
-        force: true,
-    });
-
-    fs.mkdirSync(path.join(uploadFolder, "small"));
-    fs.mkdirSync(path.join(uploadFolder, "big"));
+    if (!fs.existsSync(path.join(uploadFolder, "small"))) {
+        fs.mkdirSync(path.join(uploadFolder, "small"));
+    }
+    if (!fs.existsSync(path.join(uploadFolder, "big"))) {
+        fs.mkdirSync(path.join(uploadFolder, "big"));
+    }
 
     const bigFileName = bigImage.originalname;
     bigImageName = bigFileName;
@@ -55,19 +50,8 @@ const getMosaic = async (
             isColor,
             resolution
         );
-        
-        console.log("-->Uploading to cloud")
-        const loaclPath = data.path;
-        const mosaic = await sharp(loaclPath).toBuffer();
 
-        await uploadMosaic(mosaic, `mosaic-${bigImageName}`).then(() =>
-            console.log("-->Uploaded to cloud")
-        );
-
-        const imageURL = await getURL(`mosaic-${bigImageName}`);
-        console.log(imageURL);
-
-        return { url: imageURL, tt: data.tt };
+        return data;
     } catch (er) {
         console.log("Error getting Mosaic", er);
     }

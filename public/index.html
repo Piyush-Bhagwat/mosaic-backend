@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Mosaic Generator</title>
+        <link rel="stylesheet" href="public/style.css" />
+    </head>
+    <body>
+        <h1>Mosaic Generator</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <label for="file">Upload Big Image:</label>
+            <input type="file" name="file" accept="image/*" required />
+            <label for="files">Upload Small Images:</label>
+            <input
+                type="file"
+                name="files"
+                accept="image/*"
+                multiple
+                required
+            />
+            <button type="submit">Generate Mosaic</button>
+        </form>
+        <div id="result">
+            <!-- Display the generated image and download button here -->
+        </div>
+
+        <script>
+            document
+                .getElementById("uploadForm")
+                .addEventListener("submit", async function (event) {
+                    event.preventDefault();
+
+                    const formData = new FormData(this);
+
+                    const response = await fetch("/getMosaic", {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+                    console.log(`/static${result.path}`);
+
+                    const resultDiv = document.getElementById("result");
+                    // Update the image source to use the server route
+                    resultDiv.innerHTML = `<img class="display-img" src="/static${result.path}" alt="Generated Mosaic">`;
+                    const downloadButton = document.createElement("a");
+                    // Update the download link to use the server route
+                    downloadButton.href = `/static/${result.path}`;
+                    downloadButton.download = "mosaic.png";
+                    downloadButton.textContent = "Download Mosaic";
+                    resultDiv.appendChild(downloadButton);
+                });
+        </script>
+    </body>
+</html>
