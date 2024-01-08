@@ -6,19 +6,25 @@ var originalWidth, originalHeight;
 var smallImages = [],
     rawSmallImages = [];
 
-var smallImageSize = 40;
+var smallImageSize = 100;
+var bigImageSize = 1080;
 
 const colorOutputPath = "./assets/output/color";
 const grayOutputPath = "./assets/output/gray";
+const overlayPath = "./assets/output/overlay";
 
 var fileName = "";
+var pathToreturn;
+var resolutionMultiplier = 1;
 
 const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
     console.log("Pixelating Hero Image...");
     try {
         // Fetch the metadata of the input image
-        let metadata = await sharp(inputImagePath).resize(1024, null).toBuffer();
-        metadata = await sharp(metadata).metadata()
+        let metadata = await sharp(inputImagePath)
+            .resize(bigImageSize, null)
+            .toBuffer();
+        metadata = await sharp(metadata).metadata();
 
         // Calculate the new dimensions for resizing
         originalWidth = metadata.width;
@@ -35,13 +41,10 @@ const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
             )
             .toFile("./assets/pixelated.jpg");
 
-        // await sharp(pixelImg)
-        //     .resize(originalWidth, originalHeight, { kernel: "nearest" })
-        //     .toFile("./assets/pixelated.jpg");
-
         console.log(
             "-> Image pixelated and saved successfully",
-            Math.ceil(originalWidth), originalHeight
+            Math.ceil(originalWidth),
+            originalHeight
         );
     } catch (err) {
         console.error("!! Error pixelating image:", err);
@@ -104,7 +107,7 @@ const getPixelColor = async (inputImagePath) => {
             colorArray.push(color);
         }
 
-        console.log("-> Pixel brightness Calculated");
+        console.log("-> Pixel Color Calculated");
         return colorArray;
     } catch (err) {
         console.error("Error processing image:", err);
@@ -127,8 +130,13 @@ const loadSmallImages = async (folderPath) => {
             const imagePath = `${folderPath}/${fileName}`;
 
             // Process the image using sharp and add it to the array
-            const imageBuffer = await sharp(imagePath).toBuffer();
-            const rawImageBuffer = await sharp(imagePath).raw().toBuffer();
+            const imageBuffer = await sharp(imagePath)
+                .resize(600, null)
+                .toBuffer();
+            const rawImageBuffer = await sharp(imagePath)
+                .resize(600, null)
+                .raw()
+                .toBuffer();
 
             rawSmallImages.push({
                 fileName,
@@ -438,7 +446,7 @@ const generateMosaicColor = async (
     }
 };
 
-const getMosaicGray = async (pixelationFactor) => {
+const getMosaicGray = async (path, pixelationFactor) => {
     const brightnessArray = await getPixelBrightness("./assets/pixelated.jpg"); // Step 2
 
     const averageBrightness = await getSmallImageBrightness(); // Step 3
@@ -461,12 +469,12 @@ const getMosaicGray = async (pixelationFactor) => {
         pixelationFactor
     );
 
-    mosaicCanvas
-        .toFile(`${grayOutputPath}/mosaic-${fileName}`)
-        .then(() => console.log("Task finished:"));
+    await mosaicCanvas.toFile(`${grayOutputPath}/mosaic-${fileName}`);
+    await greyMerge(path, `${grayOutputPath}/mosaic-${fileName}`);
+    console.log("finished: ", `${grayOutputPath}/mosaic-${fileName}`);
 };
 
-const getMosaicColor = async (pixelationFactor) => {
+const getMosaicColor = async (path, pixelationFactor) => {
     const pixelColor = await getPixelColor("./assets/pixelated.jpg");
 
     const averageColor = await getSmallAverageColor(); // Step 3
@@ -492,31 +500,65 @@ const getMosaicColor = async (pixelationFactor) => {
     // Convert the mosaicCanvas object to a Buffer
     const mosaicBuffer = await mosaicCanvas.toBuffer();
 
-    mosaicCanvas
-        .toFile(`${colorOutputPath}/mosaic-${fileName}`)
-        .then(() => console.log("Task finished:"));
+    await mosaicCanvas.toFile(`${colorOutputPath}/mosaic-${fileName}`);
+    await colorMerge(path, `${colorOutputPath}/mosaic-${fileName}`);
+    console.log("finishaed", `${colorOutputPath}/mosaic-${fileName}`);
 };
 
-const processImage = async (path, pixelationFactor, isColor=1) => {
+const colorMerge = async (input, mosaic) => {
+    const inputMeta = await sharp(input).metadata();
+    const w = inputMeta.width*resolutionMultiplier;
+    const h = inputMeta.height*resolutionMultiplier;
+    
+    const img1 = await sharp(input).resize(w, h).ensureAlpha(0.4).toBuffer();
+    const img2 = await sharp(mosaic).resize(w, h).toBuffer();
+    const savePath = `${overlayPath}/overlayColor-${fileName}`;
+    await sharp(img1)
+        .composite([{ input: img2, blend: "overlay" }])
+        .modulate({ brightness: 2 })
+        .toFile(savePath);
+
+    pathToreturn = savePath;
+};
+
+const greyMerge = async (input, mosaic) => {
+    const inputMeta = await sharp(input).metadata();
+    const w = inputMeta.width*resolutionMultiplier;
+    const h = inputMeta.height*resolutionMultiplier;
+    
+    const img1 = await sharp(input).resize(w, h).ensureAlpha(0.4).toBuffer();
+    const img2 = await sharp(mosaic).resize(w, h).toBuffer();
+
+    const savePath = `${overlayPath}/overlayGrey-${fileName}`;
+    await sharp(img1)
+        .composite([{ input: img2, blend: "overlay" }])
+        .modulate({ brightness: 2 })
+        .grayscale()
+        .toFile(savePath);
+    pathToreturn = savePath;
+};
+
+const processImage = async (path, pixelationFactor, isColor, resolution) => {
+    resolutionMultiplier = resolution;
+
+    const startTime = new Date();
     await getPixelatedImage(path, pixelationFactor); // Step 1
 
-    fileName = path.split("/").pop();
+    fileName = path.split("\\").pop();
 
-    if(isColor){
-        getMosaicColor(pixelationFactor)
+    if (isColor) {
+        await getMosaicColor(path, pixelationFactor);
     } else {
-        getMosaicGray(pixelationFactor)
+        await getMosaicGray(path, pixelationFactor);
     }
+
+    fs.rm("./assets/pixelated.jpg", () => {});
+    const endTime = new Date();
+
+    console.log("Time Taken(s): ", Math.floor((endTime - startTime) / 1000));
+    return {path: pathToreturn, tt:  Math.floor((endTime - startTime) / 1000)};
 };
 
 module.exports = {
-    getPixelatedImage,
-    getPixelBrightness,
-    loadSmallImages,
-    getSmallImageBrightness,
-    getAverageBrightness,
-    getMosaicGray,
-    getMosaicColor,
-
-    processImage
+    processImage,
 };
