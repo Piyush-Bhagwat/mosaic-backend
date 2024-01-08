@@ -596,7 +596,7 @@ const processImage = async (
     const startTime = new Date();
     await getPixelatedImage(bigImagepPath, pixelationFactor); // Step 1
 
-    fileName = bigImagepPath.split("\\").pop();
+    fileName = bigImagepPath.split("/").pop();
 
     if (isColor) {
         await getMosaicColor(bigImagepPath, pixelationFactor, rootPath);

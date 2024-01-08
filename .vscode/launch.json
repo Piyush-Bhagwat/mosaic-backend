@@ -10,7 +10,6 @@
             ],
             "program": "${workspaceFolder}/server.js",
             "runtimeArgs": [
-                "--inspect",
                 "--max-old-space-size=512"
             ],
             "console": "integratedTerminal"
