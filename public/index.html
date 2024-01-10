@@ -28,7 +28,7 @@
                     name="pixelation"
                     value="30"
                     max="80"
-                    min="15"
+                    min="3"
                 />
                 <div>
                     <label for="mode">Grayscale:</label>
@@ -89,17 +89,18 @@
                             document.querySelector(".download-btns");
                         downloadButtonsDiv.innerHTML = ""; // Clear previous buttons if any
 
+
                         const overlayDownload = document.createElement("a");
                         overlayDownload.classList.add("download-btn")
                         overlayDownload.href = `/static/${result.overlayPath}`;
-                        overlayDownload.download = "mosaic.png";
+                        overlayDownload.download = `overlay-${result.name}`;
                         overlayDownload.textContent = "Download Overlay";
                         downloadButtonsDiv.appendChild(overlayDownload);
 
                         const mosaicDownload = document.createElement("a");
                         mosaicDownload.classList.add("download-btn")
                         mosaicDownload.href = `/static/${result.mosaicPath}`;
-                        mosaicDownload.download = "mosaic.png";
+                        mosaicDownload.download = `mosaic-${result.name}`;
                         mosaicDownload.textContent = "Download Mosaic";
                         downloadButtonsDiv.appendChild(mosaicDownload);
                     } catch (error) {

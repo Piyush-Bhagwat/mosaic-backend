@@ -53,11 +53,16 @@ app.get("/app", (req, res) => {
 app.post(
     "/getMosaic",
     upload.fields([
-        { name: "files", maxCount: 80 },
+        { name: "files", maxCount: 180 },
         { name: "file", maxCount: 1 },
     ]),
     async (req, res) => {
         try {
+            fs.rmSync(path.join(uploadFolder, "small"), {
+                recursive: true,
+                force: true,
+            });
+            
             const pixelation = parseInt(req.body.pixelation);
             const size = parseInt(req.body.size);
             const mode = req.body.mode.length === 2? 0 : 1; //thats weird but its correct
@@ -76,10 +81,11 @@ app.post(
                 mode,
                 size
             );
+            console.log("path", imagePath.path);
             const relativePath = imagePath.path.replace(path.join(__dirname, "assets", "output"), '').replace(/\\/g, '/');
             const mosaicPath = imagePath.mosaicPath.replace(path.join(__dirname, "assets", "output"), '').replace(/\\/g, '/');
 
-            res.send({overlayPath: relativePath, mosaicPath});
+            res.send({overlayPath: relativePath, mosaicPath, name: imagePath.name});
         } catch (error) {
             console.error("Error processing files:", error);
             res.status(500).send("Internal Server Error");

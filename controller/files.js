@@ -21,7 +21,7 @@ const getImages = async (uploadFolder, smallImages, bigImage) => {
 
     await Promise.all(
         smallImages.map(async (file) => {
-            const fileName = Date.now() + file.originalname;
+            const fileName = file.originalname;
             const filePath = path.join(uploadFolder, "small", fileName);
 
             fs.writeFileSync(filePath, file.buffer);
@@ -49,7 +49,7 @@ const getMosaic = async (
             resolution
         );
 
-        return data;
+        return {...data, name: bigImageName};
     } catch (er) {
         console.log("Error getting Mosaic", er);
     }
