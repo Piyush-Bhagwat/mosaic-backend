@@ -68,6 +68,9 @@ app.post(
             const mode = req.body.mode.length === 2? 0 : 1; //thats weird but its correct
             const smallImages = req.files["files"];
             const bigImage = req.files["file"] ? req.files["file"][0] : null;
+            const randomness = parseFloat(req.body.randomness)/100;
+
+            console.log("randomness", randomness);
 
             if (!smallImages || smallImages.length === 0 || !bigImage) {
                 return res.status(400).send("No files attached");
@@ -79,7 +82,8 @@ app.post(
                 bigImage,
                 pixelation,
                 mode,
-                size
+                size,
+                randomness
             );
             console.log("path", imagePath.path);
             const relativePath = imagePath.path.replace(path.join(__dirname, "assets", "output"), '').replace(/\\/g, '/');

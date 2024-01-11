@@ -8,9 +8,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            "port": 9229,
             "program": "${workspaceFolder}/server.js",
             "runtimeArgs": [
-                "--max-old-space-size=512"
+                "--max-old-space-size=4096"
             ],
             "console": "integratedTerminal"
         }

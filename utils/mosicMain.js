@@ -2,6 +2,7 @@ const sharp = require("sharp");
 const fs = require("fs");
 const _path = require("path");
 const jimp = require("jimp");
+const { createCanvas, loadImage } = require("canvas");
 
 //global variables
 var originalWidth, originalHeight;
@@ -328,7 +329,8 @@ const generateMosaicGray = async (
     smallImages,
     mosaicWidth,
     mosaicHeight,
-    pixelationFactor
+    pixelationFactor,
+    randomness
 ) => {
     console.log("Generating Mosaic...", brightnessArray.length);
 
@@ -351,6 +353,14 @@ const generateMosaicGray = async (
         for (let i = 0; i < brightnessArray.length; i++) {
             const curPixelBirghtness = Math.floor(brightnessArray[i]);
             const imageIDX = smallImagesByBriightness[curPixelBirghtness];
+
+            if (Math.random() < randomness) {
+                //used this to add random bits
+                closeIDX =
+                    (closeIDX + Math.floor(Math.random() * 10)) %
+                    smallImages.length;
+            }
+
             const smallImageBuffer = smallImages[imageIDX].buffer;
 
             let croppedImage = await crop(smallImageBuffer);
@@ -410,7 +420,8 @@ const generateMosaicColor = async (
     smallImages,
     mosaicWidth,
     mosaicHeight,
-    pixelationFactor
+    pixelationFactor,
+    randomness
 ) => {
     console.log("Generating Mosaic...", pixelColor.length);
 
@@ -427,7 +438,14 @@ const generateMosaicColor = async (
         let croppedImages = [];
 
         for (let i = 0; i < pixelColor.length; i++) {
-            const closeIDX = findClosestColorIndex(pixelColor[i], averageColor);
+            let closeIDX = findClosestColorIndex(pixelColor[i], averageColor);
+
+            if (Math.random() < randomness) {
+                //used this to add random bits
+                closeIDX =
+                    (closeIDX + Math.floor(Math.random() * 10)) %
+                    smallImages.length;
+            }
 
             const smallImageBuffer = smallImages[closeIDX].buffer;
 
@@ -465,7 +483,7 @@ const generateMosaicColor = async (
     }
 };
 
-const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath) => {
+const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath, randomness) => {
     try {
         const brightnessArray = await getPixelBrightness(
             "./assets/pixelated.jpg"
@@ -488,7 +506,8 @@ const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath) => {
             smallImages,
             mosaicWidth,
             mosaicHeight,
-            pixelationFactor
+            pixelationFactor,
+            randomness
         );
         mosaicPath = `${grayOutputPath}/${Date.now()}-mosaic-${fileName}`;
 
@@ -500,7 +519,12 @@ const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath) => {
     }
 };
 
-const getMosaicColor = async (bigImagePath, pixelationFactor, rootPath) => {
+const getMosaicColor = async (
+    bigImagePath,
+    pixelationFactor,
+    rootPath,
+    randomness
+) => {
     try {
         const pixelColor = await getPixelColor("./assets/pixelated.jpg");
 
@@ -521,27 +545,22 @@ const getMosaicColor = async (bigImagePath, pixelationFactor, rootPath) => {
             smallImages,
             mosaicWidth,
             mosaicHeight,
-            pixelationFactor
+            pixelationFactor,
+            randomness
         );
         mosaicPath = `${colorOutputPath}/${Date.now()}mosaic-${fileName}`;
-
-        // if (Math.max(mosaicHeight, mosaicWidth) > 4000) {
-        //     console.log(`resized Mosaic: ${Math.floor(mosaicWidth/2)}x${Math.floor(mosaicHeight/2)}`);
-        //     await mosaicCanvas.resize(Math.floor(mosaicWidth/2), Math.floor(mosaicHeight/2), { kernel: "cubic" }).toFile(mosaicPath);
-        // } else {
-
-        // }
 
         await mosaicCanvas.toFile(mosaicPath);
         console.log("Mosaic Saved at path: ", mosaicPath);
 
-        await colorMergeJimp(bigImagePath, mosaicPath);
+        await colorMerge(bigImagePath, mosaicPath);
     } catch (er) {
         if (er) console.log("Something wrong: ", er);
     }
 };
 
-const colorMerge = async (input, mosaic) => { //depreciated
+const colorMerge = async (input, mosaic) => {
+    //depreciated
     try {
         console.log("getting mosaic file from: ", input);
         const inputMeta = await sharp(input).metadata();
@@ -549,14 +568,18 @@ const colorMerge = async (input, mosaic) => { //depreciated
         const h = inputMeta.height * resolutionMultiplier;
 
         const orignalImage = await sharp(input).resize(w, h).toBuffer();
-        const mosaicGrid = await sharp(mosaic).resize(w, h).toBuffer();
+        const mosaicGrid = await sharp(mosaic)
+            .resize(w, h)
+            .ensureAlpha(0.7)
+            .modulate({ brightness: 0.7 })
+            .toBuffer();
         const savePath = `${overlayPath}/${Date.now()}-overlayColor-${fileName}`;
 
         console.log("saving Merge file to:", savePath);
 
-        await sharp(mosaicGrid)
-            .composite([{ input: orignalImage, blend: "soft-light" }])
-            // .modulate({brightness: 2})
+        await sharp(orignalImage)
+            .composite([{ input: mosaicGrid, blend: "screen" }])
+            // .modulate({brightness: 1.4})
             .ensureAlpha(1)
             .toFile(savePath);
 
@@ -565,48 +588,6 @@ const colorMerge = async (input, mosaic) => { //depreciated
         console.log("-> overlay genrated");
     } catch (er) {
         console.log("Error Merging files", er);
-    }
-};
-
-const colorMergeJimp = async (inputBuffer, mosaicBuffer) => {
-    try {
-        // Read input image and get metadata
-        const originalImage = await jimp.read(inputBuffer);
-        const w = originalImage.getWidth() * resolutionMultiplier;
-        const h = originalImage.getHeight() * resolutionMultiplier;
-
-        // Resize input image
-        originalImage.resize(w, h);
-
-        // Read mosaic image and resize
-        const mosaicImage = await jimp.read(mosaicBuffer);
-        mosaicImage.resize(w, h);
-
-        // Create a new image to store the result
-        const resultImage = new jimp(w, h, 0x00000000); // Initialize with a transparent background
-
-        // Blend images using soft-light mode
-        resultImage
-            .composite(mosaicImage, 0, 0, {
-                mode: jimp.BLEND_ADD,
-                opacitySource: 0.5,
-            })
-            .composite(originalImage, 0, 0, {
-                mode: jimp.BLEND_OVERLAY,
-                opacitySource: 1,
-            });
-
-        // Ensure alpha channel is 100% opaque
-        resultImage.opacity(1);
-
-        // Save the resulting image
-        const savePath = `${overlayPath}/${Date.now()}-overlayColor-${fileName}`;
-        await resultImage.writeAsync(savePath);
-        pathToreturn = savePath;
-        console.log("-> overlay generated", savePath);
-    } catch (err) {
-        console.log("Error Merging files", err);
-        throw err; // Propagate the error
     }
 };
 
@@ -644,7 +625,8 @@ const processImage = async (
     rootPath,
     pixelationFactor,
     isColor,
-    resolution
+    resolution,
+    randomness
 ) => {
     resolutionMultiplier = resolution;
     createOutputFolders(rootPath);
@@ -655,9 +637,19 @@ const processImage = async (
     fileName = bigImagepPath.split("\\").pop();
 
     if (isColor) {
-        await getMosaicColor(bigImagepPath, pixelationFactor, rootPath);
+        await getMosaicColor(
+            bigImagepPath,
+            pixelationFactor,
+            rootPath,
+            randomness
+        );
     } else {
-        await getMosaicGray(bigImagepPath, pixelationFactor, rootPath);
+        await getMosaicGray(
+            bigImagepPath,
+            pixelationFactor,
+            rootPath,
+            randomness
+        );
     }
 
     fs.rm("./assets/pixelated.jpg", () => {});

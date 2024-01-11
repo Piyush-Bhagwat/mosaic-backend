@@ -35,7 +35,8 @@ const getMosaic = async (
     bigImage,
     pixelationFactor,
     isColor,
-    resolution
+    resolution,
+    randomness
 ) => {
     try {
         await getImages(uploadFolder, smallImages, bigImage);
@@ -46,7 +47,8 @@ const getMosaic = async (
             uploadFolder,
             pixelationFactor,
             isColor,
-            resolution
+            resolution,
+            randomness
         );
 
         return {...data, name: bigImageName};

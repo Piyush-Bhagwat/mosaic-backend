@@ -30,6 +30,14 @@
                     max="80"
                     min="3"
                 />
+                <label for="randomness"> Randomness:</label>
+                <input
+                    type="number"
+                    name="randomness"
+                    value="20"
+                    max="80"
+                    min="5"
+                />
                 <div>
                     <label for="mode">Grayscale:</label>
                     <input type="checkbox" class="checkbox" name="mode" />
@@ -44,7 +52,7 @@
                 <button type="submit">Generate Mosaic</button>
             </form>
 
-            <div  class="result-container">
+            <div class="result-container">
                 <div id="result" class="image-display"></div>
                 <div class="download-btns"></div>
             </div>
@@ -80,7 +88,7 @@
                         });
 
                         const result = await response.json();
-                        resultDiv.innerHTML = '';
+                        resultDiv.innerHTML = "";
 
                         resultDiv.innerHTML += `<img class="display-img" src="/static${result.overlayPath}" alt="Generated Mosaic">`;
                         resultDiv.innerHTML += `<img class="display-img" src="/static${result.mosaicPath}" alt="Generated Mosaic">`;
@@ -89,16 +97,15 @@
                             document.querySelector(".download-btns");
                         downloadButtonsDiv.innerHTML = ""; // Clear previous buttons if any
 
-
                         const overlayDownload = document.createElement("a");
-                        overlayDownload.classList.add("download-btn")
+                        overlayDownload.classList.add("download-btn");
                         overlayDownload.href = `/static/${result.overlayPath}`;
                         overlayDownload.download = `overlay-${result.name}`;
                         overlayDownload.textContent = "Download Overlay";
                         downloadButtonsDiv.appendChild(overlayDownload);
 
                         const mosaicDownload = document.createElement("a");
-                        mosaicDownload.classList.add("download-btn")
+                        mosaicDownload.classList.add("download-btn");
                         mosaicDownload.href = `/static/${result.mosaicPath}`;
                         mosaicDownload.download = `mosaic-${result.name}`;
                         mosaicDownload.textContent = "Download Mosaic";
