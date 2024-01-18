@@ -37,9 +37,9 @@ const cleanfolders = () => {
         recursive: true,
         force: true,
     });
+
+    console.log("Old files removed!");
 }
-
-
 cleanfolders();
 
 

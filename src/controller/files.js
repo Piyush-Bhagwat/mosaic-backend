@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const { processImage } = require("../utils/mosicMain");
+const { Mosaic } = require("../utils/classBasedMosaic");
 
 //global var
 var bigImageName;
@@ -41,8 +42,16 @@ const getMosaic = async (
     try {
         await getImages(uploadFolder, smallImages, bigImage);
         const inputImagePath = path.join(uploadFolder, "/big/", bigImageName);
+        const mosaicCreator = new Mosaic({
+            rootPath: uploadFolder,
+            bigImageName,
+            pixelation: pixelationFactor,
+            randomness,
+            isColor,
+            resolution,
+        });
 
-        const data = await processImage(
+        const data = await mosaicCreator.processImage(
             inputImagePath,
             uploadFolder,
             pixelationFactor,
@@ -50,8 +59,16 @@ const getMosaic = async (
             resolution,
             randomness
         );
+        // const data = await processImage(
+        //     inputImagePath,
+        //     uploadFolder,
+        //     pixelationFactor,
+        //     isColor,
+        //     resolution,
+        //     randomness
+        // );
 
-        return {...data, name: bigImageName};
+        return { ...data, name: bigImageName };
     } catch (er) {
         console.log("Error getting Mosaic", er);
     }

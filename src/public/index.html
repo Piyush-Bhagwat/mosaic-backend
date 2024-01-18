@@ -88,25 +88,35 @@
                         });
 
                         const result = await response.json();
-                        resultDiv.innerHTML = "";
+                        const overlayPath = `/static/overlay/overlayColor-${result.name}`;
+                        let mosaicPath;
 
-                        resultDiv.innerHTML += `<img class="display-img" src="/static${result.overlayPath}" alt="Generated Mosaic">`;
-                        resultDiv.innerHTML += `<img class="display-img" src="/static${result.mosaicPath}" alt="Generated Mosaic">`;
+                        if(formData.mode){
+                            mosaicPath = `/static/gray/mosaic-${result.name}`
+                        } else {
+                            mosaicPath = `/static/color/mosaic-${result.name}`
+                        }
+
+                        resultDiv.innerHTML = "";
+                        resultDiv.innerHTML += `<img class="display-img" src=${overlayPath} alt="Generated Mosaic">`;
+                        resultDiv.innerHTML += `<img class="display-img" src=${mosaicPath} alt="Generated Mosaic">`;
 
                         const downloadButtonsDiv =
                             document.querySelector(".download-btns");
                         downloadButtonsDiv.innerHTML = ""; // Clear previous buttons if any
 
+                        console.log("result", result.name);
+
                         const overlayDownload = document.createElement("a");
                         overlayDownload.classList.add("download-btn");
-                        overlayDownload.href = `/static/${result.overlayPath}`;
+                        overlayDownload.href = `${overlayPath}`;
                         overlayDownload.download = `overlay-${result.name}`;
                         overlayDownload.textContent = "Download Overlay";
                         downloadButtonsDiv.appendChild(overlayDownload);
 
                         const mosaicDownload = document.createElement("a");
                         mosaicDownload.classList.add("download-btn");
-                        mosaicDownload.href = `/static/${result.mosaicPath}`;
+                        mosaicDownload.href = `${mosaicPath}`;
                         mosaicDownload.download = `mosaic-${result.name}`;
                         mosaicDownload.textContent = "Download Mosaic";
                         downloadButtonsDiv.appendChild(mosaicDownload);

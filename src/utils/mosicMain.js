@@ -1,25 +1,24 @@
+'use strict'
 const sharp = require("sharp");
 const fs = require("fs");
 const _path = require("path");
-const jimp = require("jimp");
-const { createCanvas, loadImage } = require("canvas");
 
 //global variables
-var originalWidth, originalHeight;
-var smallImages = [],
+let originalWidth, originalHeight;
+let smallImages = [],
     rawSmallImages = [];
 
-var smallImageSize = 80;
-var bigImageSize = 1080;
+let smallImageSize = 80;
+let bigImageSize = 1080;
 
-var colorOutputPath = "/output/color";
-var grayOutputPath = "/output/gray";
-var overlayPath = "/output/overlay";
+let colorOutputPath = "/output/color";
+let grayOutputPath = "/output/gray";
+let overlayPath = "/output/overlay";
 
-var fileName = "";
-var pathToreturn;
-var mosaicPath;
-var resolutionMultiplier = 1;
+let fileName = "";
+let pathToreturn;
+let mosaicPath;
+let resolutionMultiplier = 1;
 
 sharp({
     limits: {
@@ -42,7 +41,7 @@ const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
         originalHeight = metadata.height;
 
         // Pixelate the image using Sharp
-        const pixelImg = await sharp(inputImagePath)
+        await sharp(inputImagePath)
             .resize(
                 Math.ceil(originalWidth / pixelationFactor),
                 Math.ceil(originalHeight / pixelationFactor),
@@ -50,7 +49,7 @@ const getPixelatedImage = async (inputImagePath, pixelationFactor) => {
                     kernel: "nearest", // You can also use 'cubic' for smoother pixelation
                 }
             )
-            .toFile("./assets/pixelated.jpg");
+            .toFile("./src/assets/pixelated.jpg");
 
         console.log(
             "-> Image pixelated and saved successfully",
@@ -278,7 +277,7 @@ const getSmallAverageColor = async (rootPath) => {
 };
 
 const crop = async (buffer) => {
-    // buffer = await sharp("./assets/pixelated.jpg").toBuffer();
+    // buffer = await sharp("./src/assets/pixelated.jpg").toBuffer();
 
     try {
         const metadata = await sharp(buffer).metadata();
@@ -288,7 +287,7 @@ const crop = async (buffer) => {
         const top = Math.floor((metadata.height - squareSize) / 2);
 
         // Use await to ensure the sharp operations are completed before returning the result
-        var croppedBuffer = await sharp(buffer)
+        let croppedBuffer = await sharp(buffer)
             .extract({
                 left,
                 top,
@@ -352,12 +351,12 @@ const generateMosaicGray = async (
 
         for (let i = 0; i < brightnessArray.length; i++) {
             const curPixelBirghtness = Math.floor(brightnessArray[i]);
-            const imageIDX = smallImagesByBriightness[curPixelBirghtness];
+            let imageIDX = smallImagesByBriightness[curPixelBirghtness];
 
             if (Math.random() < randomness) {
                 //used this to add random bits
-                closeIDX =
-                    (closeIDX + Math.floor(Math.random() * 10)) %
+                imageIDX =
+                    (imageIDX + Math.floor(Math.random() * 10)) %
                     smallImages.length;
             }
 
@@ -483,10 +482,15 @@ const generateMosaicColor = async (
     }
 };
 
-const getMosaicGray = async (bigImagePath, pixelationFactor, rootPath, randomness) => {
+const getMosaicGray = async (
+    bigImagePath,
+    pixelationFactor,
+    rootPath,
+    randomness
+) => {
     try {
         const brightnessArray = await getPixelBrightness(
-            "./assets/pixelated.jpg"
+            "./src/assets/pixelated.jpg"
         ); // Step 2
 
         const averageBrightness = await getSmallImageBrightness(rootPath); // Step 3
@@ -526,7 +530,7 @@ const getMosaicColor = async (
     randomness
 ) => {
     try {
-        const pixelColor = await getPixelColor("./assets/pixelated.jpg");
+        const pixelColor = await getPixelColor("./src/assets/pixelated.jpg");
 
         const averageColor = await getSmallAverageColor(rootPath); // Step 3
 
@@ -567,11 +571,14 @@ const colorMerge = async (input, mosaic) => {
         const w = inputMeta.width * resolutionMultiplier;
         const h = inputMeta.height * resolutionMultiplier;
 
-        const orignalImage = await sharp(input).resize(w, h).toBuffer();
-        const mosaicGrid = await sharp(mosaic)
-            .resize(w, h)
-            .ensureAlpha(0.7)
+        const orignalImage = await sharp(input)
             .modulate({ brightness: 0.7 })
+            .resize(w, h)
+            .toBuffer();
+        const mosaicGrid = await sharp(mosaic)
+            .resize(w, h)   
+            .ensureAlpha(0.8)
+            .modulate({ brightness: 0.8 })
             .toBuffer();
         const savePath = `${overlayPath}/${Date.now()}-overlayColor-${fileName}`;
 
@@ -599,7 +606,10 @@ const greyMerge = async (input, mosaic) => {
         const w = inputMeta.width * resolutionMultiplier;
         const h = inputMeta.height * resolutionMultiplier;
 
-        const orignalImage = await sharp(input).resize(w, h).toBuffer();
+        const orignalImage = await sharp(input)
+            .resize(w, h)
+            .grayscale()
+            .toBuffer();
         const mosaicGrid = await sharp(mosaic)
             .resize(w, h)
             .ensureAlpha(0.7)
@@ -652,7 +662,7 @@ const processImage = async (
         );
     }
 
-    fs.rm("./assets/pixelated.jpg", () => {});
+    fs.rm("./src/assets/pixelated.jpg", () => {});
     const endTime = new Date();
 
     console.log("Time Taken(s): ", Math.floor((endTime - startTime) / 1000));
